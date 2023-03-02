@@ -1,20 +1,41 @@
-const http = require('http');
-const url = require('url');
 const fs = require('fs/promises');
+const express = require('express');
+const app = express();
+const port = 3000;
 
-http.createServer(async function(req,res){
-  // parse url object
-  var q = url.parse(req.url, true);
-  const filename = `.${(q.pathname === '/' ? '/index': q.pathname)}.html`;
+app.use('/img', express.static('img'));
+
+const displayPage = async (filename, res) =>{
   try{
     const data = await fs.readFile(filename, 'utf8');
-    res.writeHead(200, {'Content-Type' : 'text/html'});
-    res.write(data);
-    res.end();
+    res.send(data);
   } catch(err){
-    res.writeHead(404, {'Content-Type' : 'text/html'});
+    res.status(404);
     const data = await fs.readFile('404.html', 'utf-8');
-    res.write(data);
-    res.end();
+    res.send(data);
   }
-}).listen(8081);
+}
+
+app.get('/', (req,res) => {
+  res.status(200);
+  displayPage('index.html', res);
+});
+
+app.get('/contact-me', (req,res) => {
+  res.status(200);
+  displayPage('contact-me.html', res);
+});
+
+app.get('/about', (req,res) => {
+  res.status(200);
+  displayPage('about.html', res);
+});
+
+app.get('*', (req,res) => {
+  res.status(404);
+  displayPage('404.html', res);
+});
+
+app.listen(port, ()=>{
+  console.log('Now listening on port ', port);
+})
